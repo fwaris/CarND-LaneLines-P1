@@ -1,26 +1,18 @@
 **Finding Lane Lines on the Road** 
 ==================================
 
-##Writeup Template
-
-###You can use this file as a template for your writeup if you want to submit it as a markdown file. But feel free to use some other method and submit a pdf if you prefer.
-
----
-
-**Finding Lane Lines on the Road**
-
-The goals / steps of this project are the following:
-* Make a pipeline that finds lane lines on the road
-* Reflect on your work in a written report
-
-
-[//]: # (Image References)
-
-[image1]: ./examples/grayscale.jpg "Grayscale"
-
----
-
 ### Reflection
+This project contains a pipline for taking a color image (view of the road ahead)
+and creating a modified image that shows the lane edges by projecting two lines
+on to the identified lane left and right lane markers.
+
+The pipline is applied to a series of test images and views. The output of the pipline are stored in the [/test_images_output/]
+and [/test_videos_output/] folders
+
+
+
+The project transform images by projecting a marker onto 
+the lanes markings identified 
 
 ###1. Describe your pipeline. As part of the description, explain how you modified the draw_lines() function.
 
