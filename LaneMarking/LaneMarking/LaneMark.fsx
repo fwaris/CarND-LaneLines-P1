@@ -8,6 +8,7 @@ let uiCtx = System.Threading.SynchronizationContext.Current
 open OpenCvSharp
 open System
 
+//show image in an opencv window (background thread)
 let win t i = 
     async{
         do! Async.SwitchToContext uiCtx
