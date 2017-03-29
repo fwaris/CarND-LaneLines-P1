@@ -5,6 +5,12 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "LaneMarking", "LaneMarking\LaneMarking.fsproj", "{C03AF3C3-F882-4EC0-9A29-148D5C994021}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Writeup", "Writeup", "{B118502A-BEB3-4B2F-A33E-9069285E3DA7}"
+	ProjectSection(SolutionItems) = preProject
+		..\README.md = ..\README.md
+		..\writeup_template.md = ..\writeup_template.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
