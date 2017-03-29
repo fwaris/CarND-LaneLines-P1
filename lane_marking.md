@@ -1,13 +1,18 @@
 **Finding Lane Lines on the Road** 
 ==================================
 
-### Reflection
+**Overview**
 This project contains a pipline for taking a color image (view of the road ahead)
 and creating a modified image that shows the lane edges by projecting two lines
 on to the identified lane left and right lane markers.
 
 The pipline is applied to a series of test images and views. The output of the pipline are stored in the [test_images_output](/test_images_output/)
-and [test_videos_output)](/test_videos_output/) folders.
+and [test_videos_output](/test_videos_output/) folders.
+
+The pipeline code is in the [LaneMark.fsx](/LaneMarking/LaneMarking/LaneMark.fsx) file.
+
+### Reflection
+ 
 
 
 
