@@ -7,8 +7,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "LaneMarking", "LaneMarking\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Writeup", "Writeup", "{B118502A-BEB3-4B2F-A33E-9069285E3DA7}"
 	ProjectSection(SolutionItems) = preProject
+		..\lane_marking.md = ..\lane_marking.md
 		..\README.md = ..\README.md
-		..\writeup_template.md = ..\writeup_template.md
 	EndProjectSection
 EndProject
 Global
