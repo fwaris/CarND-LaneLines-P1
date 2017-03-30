@@ -3,7 +3,7 @@
 #r @"OpenCvSharp.Blob.dll"
 #r @"OpenCvSharp.Extensions.dll"
 #r @"OpenCvSharp.UserInterface.dll"
-System.Environment.CurrentDirectory <- @"C:\Users\family\Documents\Visual Studio 2015\Projects\OpenCVSharpTest\packages\OpenCvSharp3-AnyCPU.3.2.0.20170324\NativeDlls\x64"
+System.Environment.CurrentDirectory <- __SOURCE_DIRECTORY__ + @"..\..\packages\OpenCvSharp3-AnyCPU.3.2.0.20170324\NativeDlls\x64"
 let uiCtx = System.Threading.SynchronizationContext.Current
 open OpenCvSharp
 open System
@@ -15,11 +15,14 @@ let win t i =
         new Window((t:string), WindowMode.AutoSize,i) |> ignore 
         } |> Async.Start
 
+//utility operator for F# implicit conversions 
 let inline (!>) (x:^a) : ^b = ((^a or ^b) : (static member op_Implicit : ^a -> ^b) x)
 
+//functions to convert points to/from world/screen cordinates
 let toWorldP h (p:Point) = Point(p.X, h - p.Y)
 let toScreenP h (p:Point) = Point(p.X, h - p.Y)
 
+//return slope of line segment in radians (to avoid infinity values)
 let slope h (l:LineSegmentPoint) =
     let p1 = toWorldP h l.P1
     let p2 = toWorldP h l.P2
@@ -27,6 +30,7 @@ let slope h (l:LineSegmentPoint) =
 //    printfn "slope:[%A,%A] %A,%A=%f" l.P1 l.P2 p1 p2 s
     s
 
+//make a polygon mask for isolating the view ahead for marking lanes
 let makeMask (w,h) = 
     let baseL = float w * 0.1 |> int
     let baseR = float w * 0.95 |> int
@@ -43,6 +47,9 @@ let makeMask (w,h) =
     Cv2.FillConvexPoly(!>mask,maskPts,Scalar.White)
     mask,maskPts
 
+//create a mask using the OpenCV InRange function
+//the mask isloates regions which are likely to
+//be lane markers - yellow and white areas
 let isolateLaneMarkers(mImage:Mat)=
     let m = new Mat()
     let low = Scalar(90.,90.,190.)
@@ -50,16 +57,29 @@ let isolateLaneMarkers(mImage:Mat)=
     Cv2.InRange(!>mImage,low,high,!>m)
     m
 
+//canny edge detection
 let markEdges (mImage:Mat) (mask:Mat) =
     let gray = isolateLaneMarkers mImage
     Cv2.BitwiseAnd(!>gray,!>mask,!>gray)
     Cv2.Canny(!>gray,!>gray,100.,200.,3)
     gray
 
+//slopes for left and right lanes in radians
+//line segments with slopes outside these ranges
+//are discarded. Note these would have
+//to be adjusted according to 
+//camera parameters and mounting 
 let leftLaneSlopes = (0.45,0.72)
 let rightLaneSlopes = (-0.65,-0.45)
-let (<->) s (a,b)  = s >= a && s <= b 
 
+let (<->) s (a,b)  = s >= a && s <= b //between operator
+
+//classify the given line segments
+//into left and right lane buckets
+//uses leftLane and rightLane slopes above
+//returns the slope (in radians) along with 
+//segmented lane segments
+//discards segments not in the two ranges
 let segmentLanes h (segStds:LineSegmentPoint[]) =
     (([],[]),segStds) ||> Array.fold(fun (ls,rs) seg ->
         let s = slope h seg
@@ -71,8 +91,18 @@ let segmentLanes h (segStds:LineSegmentPoint[]) =
             (ls,rs)
         )
 
+//'null' line segment used when no line segments found in the image
 let NullSeg = LineSegmentPoint(Point(0,0),Point(0,0))
 
+//Returns a single line segment
+//from a given collection of line segments (with slopes)
+//It returns the 'average' of the line segments
+//Both, the slopes of all the line segments
+//and the points are averaged.
+//These averaged values (slope and point)
+//are used to derive a line equation
+//The returned segment represents a portion
+//of this line.
 let laneOverlay h (segs:(float*LineSegmentPoint) seq) =
     if segs |> Seq.isEmpty then 
         NullSeg
@@ -80,13 +110,12 @@ let laneOverlay h (segs:(float*LineSegmentPoint) seq) =
         let avgTheta = segs |> Seq.averageBy fst
         let pxI = segs |> Seq.collect (fun (_,s) -> [s.P1.X;s.P2.X]) |> Seq.map float |> Seq.average |> int
         let pyI = segs |> Seq.collect (fun (_,s) -> [s.P1.Y;s.P2.Y]) |> Seq.map float |> Seq.average |> int
-        //        let (_,fseg) = segs |> Seq.maxBy (fun (_,s)->s.P1.Y)
         let pW = toWorldP h (Point(pxI,pyI)) //fseg.P2
         let (px,py) = float pW.X, float pW.Y
         let slope = Math.Tan(avgTheta) 
         //(y - y1) = m(x - x1) ==> (y - y1) = Tan(theta) (x - x1) ==> x = (y - y1)/(Tan(theta)) + x1
-        let y x' = (slope * (x' - px) ) - py
-        let x y' = ((y' - py)/slope) + px
+        let y x' = (slope * (x' - px) ) - py // y given x - not used
+        let x y' = ((y' - py)/slope) + px    // x given y
         let highMark = 200
         let xLow = x 0. |> int
         let xHigh = x (float highMark) |> int
@@ -96,6 +125,9 @@ let laneOverlay h (segs:(float*LineSegmentPoint) seq) =
         //printfn "%A,%A" l.P1 l.P2
         l
 
+//Returns a new image that
+//projects lane lines on the input image
+//utilizing the edges image of the input image
 let markLanes (input:Mat) (edges:Mat)=
     let output = input.Clone()
     let h = input.Height
@@ -120,8 +152,10 @@ let markLanes (input:Mat) (edges:Mat)=
 //        )
     output
 
-//edges(mImage) |> win "i"
 ;;
+
+//code to process image and video files 
+//======================================
 open System.IO
 let inImageFiles = Directory.GetFiles(@"C:\Users\family\CarND-LaneLines-P1\test_images")
 let outImageFolder = @"C:\Users\family\CarND-LaneLines-P1\test_images_output"
@@ -167,10 +201,15 @@ let processVideo f =
     mask.Release()
     m2.Release()
 
-(*
+(* 
 inImageFiles |> Seq.head |> processFileImage
 for f in inImageFiles do processFileImage f
 
 let f = videoInFiles |> Seq.head
 for f in videoInFiles do processVideo f
+*)
+
+(*
+let (m,_) = makeMask (960,540)
+win "polygon mask" m
 *)
