@@ -3,10 +3,11 @@
 
 ### Overview
 This project contains a pipline for taking a color image (view of the road ahead)
-and creating a modified image that shows the lane edges by projecting two lines
-on to the identified left and right lane markers.
+and creating a modified image that marks the detected lane edges.
 
-The pipline is applied to a series of test images and views. The output of the pipline are stored in the [test_images_output](/test_images_output/)
+[!sample](/test_images_output/solidYellowCurve.jpg)
+
+The pipline is applied to a series of test images and views. The outputs of the pipline are stored in the [test_images_output](/test_images_output/)
 and [test_videos_output](/test_videos_output/) folders.
 
 The pipeline code is in the [LaneMark.fsx](/LaneMarking/LaneMarking/LaneMark.fsx) file.
