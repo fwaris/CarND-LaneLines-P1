@@ -26,22 +26,25 @@ The grayscale copy is masked with a polygon such that only the front center port
 The polygon's dimensions are calculated from the input image dimension and are expressed
 as an array of 4 points. The polygon parameters are dependent on the camera used (field of view, focal length, etc.) and 
 its mounting position above the ground and hence should be adjusted accordingly.
-The [makeMask function](/LaneMarking/LaneMarking/LaneMark.fsx#L34) uses the OpenCV FillConvexPoly function 
+The [makeMask function](/LaneMarking/LaneMarking/LaneMark.fsx#L33) uses the OpenCV FillConvexPoly function 
 internally to fill the mask.
 
 #### 2. Edge detection
 The masked grayscale image is processed with OpenCV InRange function.
 to isolate the likely lane markings regions. This is done by the 
-[isolateLaneMarkers function](/LaneMarking/LaneMarking/LaneMark.fsx#L53)
+[isolateLaneMarkers function](/LaneMarking/LaneMarking/LaneMark.fsx#L50)
 function of the pipeline.
+
+![edges](/img/edges.png)
 
 The mask created by the InRange function is bitwise_and'ed with the grayscale image
 to suppress regions other than lane markers. And then Canny edge detection is applied.
-See [markEdges function](/LaneMarking/LaneMarking/LaneMark.fsx#L61)
+See [markEdges function](/LaneMarking/LaneMarking/LaneMark.fsx#L60)
 
 #### 3. Lines
 The OpenCV HoughLinesP function is applied to the 'edges' image to find line segments.
-This processing is done in the [markLanes pipeline function](/LaneMarking/LaneMarking/LaneMark.fsx#L131).
+This processing is done in the 
+[markLanes pipeline function](/LaneMarking/LaneMarking/LaneMark.fsx#L128).
 Ultimately *markLanes* returns an image with lane lines projected onto the image. The many
 important intermediate steps this function performs are described next.
 
@@ -49,15 +52,18 @@ important intermediate steps this function performs are described next.
 The found line segments are classified into two buckets - one for each of the two lanes.
 First, the slope of each line segment is calculated [See slope](/LaneMarking/LaneMarking/LaneMark.fsx#L26).
 
-Second, the [segmentLanes function](/LaneMarking/LaneMarking/LaneMark.fsx#L83) is used
-to bucket the segments. The bucketing is done via [slope ranges](/LaneMarking/LaneMarking/LaneMark.fsx#L72).
+Second, the [segmentLanes function](/LaneMarking/LaneMarking/LaneMark.fsx#L77) is used
+to bucket the segments. The bucketing is done via 
+[slope ranges](/LaneMarking/LaneMarking/LaneMark.fsx#L67).
 Any line segments not within the given ranges are discarded (e.g. horizontal lines).
 Note the slope ranges are camera dependent and would have to be adjusted based on 
 the camera parameters and it mounting.
 
+![slope ranges](/img/slope_ranges.png)
+
 ##### *Segment Averaging*
 The line segments for each lane bucket are averaged to come up to a single line segment for projection.
-The [pipeline function laneOverlay](/LaneMarking/LaneMarking/LaneMark.fsx#L106) performs
+The [pipeline function laneOverlay](/LaneMarking/LaneMarking/LaneMark.fsx#L97) performs
 the averaging:
 
 - Average all the slopes
