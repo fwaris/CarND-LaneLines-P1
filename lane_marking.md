@@ -5,7 +5,7 @@
 This project contains a pipline for taking a color image (view of the road ahead)
 and creating a modified image that marks the detected lane edges.
 
-[!sample](/test_images_output/solidYellowCurve.jpg)
+![sample](/test_images_output/solidYellowCurve.jpg)
 
 The pipline is applied to a series of test images and views. The outputs of the pipline are stored in the [test_images_output](/test_images_output/)
 and [test_videos_output](/test_videos_output/) folders.
@@ -21,7 +21,7 @@ The pipeline processing is as follows:
 A copy of the input image is grayscaled for Canny edge detection.
 The grayscale copy is masked with a polygon such that only the front center portion is available for edge detection.
 
-[!polygon](/img/polygon.png)
+![polygon](/img/polygon.png)
 
 The polygon's dimensions are calcluated from the input image dimension and are expressed
 as an array of 4 points. The polygon parameters are dependent on the camera used (field of view, focal length, etc.) and 
