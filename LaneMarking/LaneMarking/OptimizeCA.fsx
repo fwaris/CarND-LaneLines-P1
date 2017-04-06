@@ -16,7 +16,7 @@ let tolParms (p:Parm array) =
             ColorHigh       = Scalar(vF p.[7], vF p.[8],vF p.[9]) //Scalar(255.,255.,255.)
             CannyTh1        = vF(p.[10]) ///100.
             CannyTh2        = vF(p.[11]) //200.
-            CannyAperture   = let v = vI(p.[12]) in if v % 2 = 0 then v + 1 else v //should be odd
+            CannyAperture   = 3//let v = vI(p.[12]) in if v % 2 = 0 then v + 1 else v |> min 7 |> max 3 //should be odd between 3-7
             HoughTh         = vI(p.[13]) //15
             HoughMinLineLn  = vF(p.[14]) //30.
             HoughMaxGap     = vF(p.[15]) //100.
@@ -28,21 +28,22 @@ let CAParms =
             F(0.72,0.55,0.80)   // LeftlanesSlope 2
             F(-0.65,-0.70,-0.55) // RightLaneSlopes 1
             F(-0.45,-0.55,-0.40) // RightLaneSlopes 2
-            F(90.,70.,120.)     // ColorLow 1
-            F(90.,70.,120.)     // ColorLow 2
-            F(190.,175.,205.)   // ColorLow 3
+            F(90.,50.,205.)     // ColorLow 1
+            F(90.,50.,205.)     // ColorLow 2
+            F(190.,50.,205.)   // ColorLow 3
             F(255.,250.,255.)   // ColorHigh 1
             F(255.,250.,255.)   // ColorHigh 2
             F(255.,250.,255.)   // ColorHigh 3
             F(100.,40.,150.)    // CannyTh1
             F(200.,150.,300.)   // CannyTh2
-            I(3,2,7)            // CannyAperture
+            I(3,3,7)            // CannyAperture
             I(15,10,30)         //HoughTh
             F(30.,10.,50.)      // HoughMinLineLn  = vF(p.[14]) //30.
             F(100.,75.,150.)    // HoughMaxGap     = vF(p.[15]) //100.
           |]
 
 type Label = {Img:Mat; SegLeft:LineSegmentPoint; SegRight:LineSegmentPoint}
+
 
 let readLabels file =
      File.ReadAllLines(file)
@@ -75,10 +76,16 @@ let dist (L1:LineSegmentPoint) (L2:LineSegmentPoint) =
    
 let fitness parms =
     let lparms = tolParms parms // parms
-    (0.,labels) ||> Array.fold(fun acc lbl ->
-        let ls,rs = findSlopes lparms mask lbl.Img
-        (dist ls lbl.SegLeft) + (dist rs lbl.SegRight) + acc
-        )
+    try
+        (0.,labels) ||> Array.fold(fun acc lbl ->
+            let ls,rs = findSlopes lparms mask lbl.Img
+            (dist ls lbl.SegLeft) + (dist rs lbl.SegRight) + acc
+            )
+    with ex ->
+        printfn "%s" ex.Message
+        printfn "%A" lparms
+        9999.
+        
 
 let defaultNetwork = CAUtils.hexagonNetwork
 
@@ -97,7 +104,7 @@ let inline makeCA fitness comparator pop bspace kd influence =
 
 let ipdKdist      c p    = KDIPDGame.knowledgeDist c p
 let inline bsp fitness parms comparator = CARunner.defaultBeliefSpace parms comparator fitness
-let inline createPop bsp parms init = CAUtils.createPop (init bsp) parms 100 false
+let inline createPop bsp parms init = CAUtils.createPop (init bsp) parms 50 true
 let createKdIpdCA vmx f c p  = 
     let bsp = bsp f p c
     let pop = createPop bsp p CAUtils.baseKsInit |> KDIPDGame.initKS
@@ -105,7 +112,6 @@ let createKdIpdCA vmx f c p  =
     makeCA f c pop bsp kd KDIPDGame.ipdInfluence
 let comparator  = CAUtils.Minimize
 let kdIpdCA         = createKdIpdCA  (0.2, 0.9) fitness comparator CAParms 
-let termination step = step.Count > 100
 let best stp = if stp.Best.Length > 0 then stp.Best.[0].Fitness,stp.Best.[0].Parms else 0.0,[||]
 let runCollect data maxBest ca =
     let loop stp = 
@@ -127,5 +133,5 @@ let ipdDataCollector s =
     |> Seq.map (fun (k,vs) -> k, vs |> Seq.map snd |> Seq.sum)
     |> Seq.sortBy fst
     |> Seq.toList
-let tk s = s |> Seq.truncate 250 |> Seq.toList
+let tk s = s |> Seq.truncate 100 |> Seq.toList
 let kdIpd           = kdIpdCA |> runCollect ipdDataCollector 2 |> tk
