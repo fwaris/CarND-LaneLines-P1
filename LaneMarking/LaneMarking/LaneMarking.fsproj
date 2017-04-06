@@ -68,6 +68,8 @@
     <None Include="App.config" />
     <Content Include="packages.config" />
     <None Include="LaneMark.fsx" />
+    <None Include="Optimize.fsx" />
+    <None Include="OptimizeCA.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="CALib">
